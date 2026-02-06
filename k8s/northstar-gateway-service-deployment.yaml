@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: northstar-gateway-service-configmap
+data:
+  openapi-auth-url: "lb://northstar-auth-service"
+  openapi-book-url: "lb://northstar-book-service"
+  openapi-store-url: "lb://northstar-store-service"
+  openapi-order-url: "lb://northstar-order-service"
+  openapi-inventory-url: "lb://northstar-inventory-service"
+  openapi-notification-url: "lb://northstar-notification-service"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: northstar-gateway-service-secret
+data:
+  client-id: "bm9ydGhzdGFy"
+  client-secret: "bm9ydGhzdGFyQDI1"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: northstar-gateway-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: northstar-gateway-service-deployment
+  template:
+    metadata:
+      labels:
+        app: northstar-gateway-service-deployment
+    spec:
+      containers:
+        - env:
+            - name: JAVA_OPTS
+              value: "-XX:TieredStopAtLevel=1 -noverify -Xms128m -Xmx512m -Xss4m -XX:ParallelGCThreads=1 -XX:ConcGCThreads=1 -Djava.util.concurrent.ForkJoinPool.common.parallelism=1"
+            - name: DISCOVERY_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-discovery-service-configmap
+                  key: discovery-server-url
+            - name: OPENAPI_AUTH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-configmap
+                  key: openapi-auth-url
+            - name: OPENAPI_BOOK_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-configmap
+                  key: openapi-book-url
+            - name: OPENAPI_STORE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-configmap
+                  key: openapi-store-url
+            - name: OPENAPI_ORDER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-configmap
+                  key: openapi-order-url
+            - name: OPENAPI_INVENTORY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-configmap
+                  key: openapi-inventory-url
+            - name: OPENAPI_NOTIFICATION_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-configmap
+                  key: openapi-notification-url
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: northstar-gateway-service-secret
+                  key: client-id
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: northstar-gateway-service-secret
+                  key: client-secret
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-db-configmap
+                  key: redis-host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: northstar-gateway-service-db-configmap
+                  key: redis-port
+          image: northstar-gateway-service:latest
+          imagePullPolicy: IfNotPresent
+          name: northstar-gateway-service
+          ports:
+            - containerPort: 8181
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 800m
+              memory: 1024Mi
+            requests:
+              cpu: 400m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: northstar-gateway-service-svc
+spec:
+  selector:
+    app: northstar-gateway-service-deployment
+  ports:
+    - protocol: TCP
+      port: 8181
+      targetPort: 8181
+  type: LoadBalancer

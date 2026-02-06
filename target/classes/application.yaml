@@ -1,0 +1,126 @@
+server:
+  port: 8181
+  error:
+    whitelabel:
+      enabled: false
+
+gateway:
+  msg: "Welcome to NorthStar Retail Gateway"
+  build-version: 1
+  openapi-service-url:
+    auth: ${OPENAPI_AUTH_URL:lb://northstar-auth-service}
+    book: ${OPENAPI_BOOK_URL:lb://northstar-book-service}
+    store: ${OPENAPI_STORE_URL:lb://northstar-store-service}
+    order: ${OPENAPI_ORDER_URL:lb://northstar-order-service}
+    inventory: ${OPENAPI_INVENTORY_URL:lb://northstar-inventory-service}
+    notification: ${OPENAPI_NOTIFICATION_URL:lb://northstar-notification-service}
+  oauth:
+    clientId: ${CLIENT_ID:northstar}
+    clientSecret: ${CLIENT_SECRET:northstar@25}
+
+spring:
+  application:
+    name: northstar-gateway-service
+  profiles:
+    active: default
+  main:
+    web-application-type: reactive
+    allow-bean-definition-overriding: true
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        - TokenRelay=
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            max-age: 3600
+      httpclient:
+        connect-timeout: 50000
+        response-timeout: 120s
+      filter:
+        circuit-breaker:
+          enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    gateway:
+      enabled: true
+  endpoint:
+    gateway:
+      access: read_only
+  info:
+    env:
+      enabled: true
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: NorthStar Gateway Service
+      - url: /api/auth/v3/api-docs
+        name: NorthStar Auth Service
+      - url: /api/book/v3/api-docs
+        name: NorthStar Book Service
+      - url: /api/store/v3/api-docs
+        name: NorthStar Store Service
+      - url: /api/order/v3/api-docs
+        name: NorthStar Order Service
+      - url: /api/inventory/v3/api-docs
+        name: NorthStar Inventory Service
+      - url: /api/notification/v3/api-docs
+        name: NorthStar Notification Service
+
+logging:
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){blue} %clr(%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]){yellow} %clr(:){red} %clr(%m){faint}%n"
+  level:
+    com.northstar.northstar.gateway.service: DEBUG
+
+info:
+  app:
+    name: Gateway MicroService
+    description: NorthStar Retail Gateway Application
+    version: 1.0.0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVER_URL:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    hostname: northstar-gateway-service
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}

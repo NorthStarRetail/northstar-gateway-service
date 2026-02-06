@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: northstar-gateway-service-db-configmap
+data:
+  redis-host: "northstar-gateway-service-db-svc"
+  redis-port: "6379"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: northstar-gateway-service-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: northstar-gateway-service-db-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: northstar-gateway-service-db-deployment
+  template:
+    metadata:
+      labels:
+        app: northstar-gateway-service-db-deployment
+    spec:
+      containers:
+        - name: northstar-gateway-service-db
+          image: redis:alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - mountPath: /data
+              name: northstar-gateway-service-db-storage
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+      volumes:
+        - name: northstar-gateway-service-db-storage
+          persistentVolumeClaim:
+            claimName: northstar-gateway-service-db-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: northstar-gateway-service-db-svc
+spec:
+  selector:
+    app: northstar-gateway-service-db-deployment
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
