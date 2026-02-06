@@ -34,6 +34,10 @@ spec:
       labels:
         app: northstar-gateway-service-deployment
     spec:
+      initContainers:
+        - name: wait-for-redis
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z northstar-gateway-service-db-svc 6379; do echo waiting for redis; sleep 2; done;']
       containers:
         - env:
             - name: JAVA_OPTS
@@ -106,6 +110,22 @@ spec:
             requests:
               cpu: 400m
               memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8181
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8181
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
 ---
 apiVersion: v1
 kind: Service
