@@ -122,5 +122,5 @@ eureka:
     register-with-eureka: true
   instance:
     hostname: northstar-gateway-service
-    prefer-ip-address: true
+#    prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}

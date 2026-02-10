@@ -2,7 +2,6 @@ package com.northstar.northstar.gateway.service;
 
 import com.northstar.northstar.gateway.service.configuration.AppConfiguration;
 import org.springframework.boot.SpringApplication;
-
 import java.util.Base64;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -67,8 +66,7 @@ public class NorthstarGatewayServiceApplication {
                         .filters(f -> f.stripPrefix(2)
                                 .requestRateLimiter(config -> config
                                         .setRateLimiter(redisRateLimiter())
-                                        .setKeyResolver(ipKeyResolver())
-                                )
+                                        .setKeyResolver(ipKeyResolver()))
                                 .circuitBreaker(config -> config
                                         .setName("bookCircuitBreaker")
                                         .setFallbackUri("forward:/book-fallback")
@@ -88,8 +86,7 @@ public class NorthstarGatewayServiceApplication {
                         .filters(f -> f.stripPrefix(2)
                                 .requestRateLimiter(config -> config
                                         .setRateLimiter(redisRateLimiter())
-                                        .setKeyResolver(ipKeyResolver())
-                                )
+                                        .setKeyResolver(ipKeyResolver()))
                                 .circuitBreaker(config -> config
                                         .setName("storeCircuitBreaker")
                                         .setFallbackUri("forward:/store-fallback")
@@ -109,8 +106,7 @@ public class NorthstarGatewayServiceApplication {
                         .filters(f -> f.stripPrefix(2)
                                 .requestRateLimiter(config -> config
                                         .setRateLimiter(redisRateLimiter())
-                                        .setKeyResolver(ipKeyResolver())
-                                )
+                                        .setKeyResolver(ipKeyResolver()))
                                 .circuitBreaker(config -> config
                                         .setName("orderCircuitBreaker")
                                         .setFallbackUri("forward:/order-fallback")
@@ -130,8 +126,7 @@ public class NorthstarGatewayServiceApplication {
                         .filters(f -> f.stripPrefix(2)
                                 .requestRateLimiter(config -> config
                                         .setRateLimiter(redisRateLimiter())
-                                        .setKeyResolver(ipKeyResolver())
-                                )
+                                        .setKeyResolver(ipKeyResolver()))
                                 .circuitBreaker(config -> config
                                         .setName("inventoryCircuitBreaker")
                                         .setFallbackUri("forward:/inventory-fallback")
@@ -151,8 +146,7 @@ public class NorthstarGatewayServiceApplication {
                         .filters(f -> f.stripPrefix(2)
                                 .requestRateLimiter(config -> config
                                         .setRateLimiter(redisRateLimiter())
-                                        .setKeyResolver(ipKeyResolver())
-                                )
+                                        .setKeyResolver(ipKeyResolver()))
                                 .circuitBreaker(config -> config
                                         .setName("notificationCircuitBreaker")
                                         .setFallbackUri("forward:/notification-fallback")
